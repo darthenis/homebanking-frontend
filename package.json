@@ -13,7 +13,8 @@
     "pinia": "^2.0.35",
     "vue": "^3.2.47",
     "vue-router": "^4.1.6",
-    "vue3-lottie": "^2.5.0"
+    "vue3-lottie": "^2.5.0",
+    "vue3-toastify": "^0.1.7"
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^4.1.0",

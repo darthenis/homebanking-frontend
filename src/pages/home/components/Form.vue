@@ -4,8 +4,10 @@
 import { inject } from 'vue';
 import { Vue3Lottie } from 'vue3-lottie'
 import {useMobile} from '../../../composables/useMobile.js'
-import { activeEmail } from '../../../services/activeEmail';
+import { activeEmail, resendEmail } from '../../../services/activeEmail';
 import SendEmailJSON from "../../../assets/sendEmail.json"
+import LoadingJSON from '../../../assets/loading.json'
+import router from '../../../router/routes-home.js'
 
 const passwordRegex = /^(?=.*[a-zA-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{6,16}$/
 
@@ -47,13 +49,17 @@ export default {
                     confirmPassword: ""
                 }
             },
+            emailToResend: "",
             typePassword : "password",
             isLoading: false,
             confirmEmail : false,
             SendEmailJSON : SendEmailJSON,
+            LoadingJSON : LoadingJSON,
             activingEmail : null,
             emailActived : null,
-            resendingEmail : null
+            resendingEmail : null,
+            activeResendEmailForm: false,
+            emailAlreadyActive: null
         }
     },
     created(){
@@ -66,7 +72,7 @@ export default {
                             this.activingEmail = false;
                             this.emailActived = true;
                             this.secondsCounterHandler();
-                            setTimeout(() => window.location.href = "/web/accounts.html",5000)
+                            setTimeout(() => router.push("/account"),5000)
                         } else {
                             this.activingEmail = false;
                             this.emailActived = false;
@@ -77,6 +83,12 @@ export default {
     methods:{
         activeRegister(){
             this.change(false)
+        },
+        backToLogin(){
+
+            this.confirmEmail = false
+            this.activingEmail = false;
+
         },
         handleFormActive(){
             this.change(true)
@@ -137,7 +149,31 @@ export default {
 
             }
 
-        }
+        },
+        resendEmailHandler(){
+            this.resendingEmail = true;
+            this.isLoading = true;
+            this.emailAlreadyActive = false;
+            resendEmail(this.emailToResend)
+                .then(res => {
+                    if(res && res != "already active"){
+                        this.activeResendEmailForm = false;
+                        this.resendingEmail = false;
+                        this.isLoading = false;
+                    } else {
+                        this.resendingEmail = false;
+                        this.activeResendEmailForm = false;
+                        this.isLoading = false;
+
+                        if(res == "already active"){
+
+                            this.emailAlreadyActive = true;
+
+                        }
+
+                    }
+                })
+        },
     },
     computed: {
 
@@ -209,18 +245,16 @@ export default {
                         style="min-height: 300px">
                     <h3 class="text-center mt-2">Confirm Email</h3>
                         <div v-if="!activingEmail && emailActived == null">
-                            <Vue3Lottie  :animationData="SendEmailJSON" 
+                            <Vue3Lottie     :animationData="SendEmailJSON" 
                                             :width="100" :height="100" 
                                             />
                             <p class="text-center">We sent you a link at your email to confirm.</p>
                         </div>
                         <div  v-if="activingEmail" >
                             <p class="fs-6 text-center">Confirming, <br/> please wait a moment</p>
-                            <Vue3Lottie  src="./assets/loading.json"  
-                            background="transparent"  
-                            speed="1"  
-                            style="width: 100%; height: 100px;"  
-                            autoplay loop></Vue3Lottie>
+                            <Vue3Lottie     :animationData="LoadingJSON"  
+                                            :width="100" :height="100" 
+                                />
                         </div>
                         
                         <div    class="d-flex flex-column"
@@ -234,7 +268,7 @@ export default {
                             <p class="text-center" v-if="resendingEmail === null">Try resend the link to your email</p>
                             <button class="btn text-light mt-2"
                                     style="background-color: #e9605a;" 
-                                    @click="activeResendForm">
+                                    @click="activeResendEmailForm = true">
                                     Resend email
                             </button>
                         </div>
