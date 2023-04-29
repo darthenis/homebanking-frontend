@@ -7,7 +7,9 @@ import {useMobile} from '../../../composables/useMobile.js'
 import { activeEmail, resendEmail } from '../../../services/activeEmail';
 import SendEmailJSON from "../../../assets/sendEmail.json"
 import LoadingJSON from '../../../assets/loading.json'
-import router from '../../../router/routes-home.js'
+import router from '../../../router/routes.js'
+import { toast } from 'vue3-toastify';
+import axios from 'axios';
 
 const passwordRegex = /^(?=.*[a-zA-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{6,16}$/
 
@@ -72,7 +74,7 @@ export default {
                             this.activingEmail = false;
                             this.emailActived = true;
                             this.secondsCounterHandler();
-                            setTimeout(() => router.push("/account"),5000)
+                            setTimeout(() => router.push("/user"),5000)
                         } else {
                             this.activingEmail = false;
                             this.emailActived = false;
@@ -88,6 +90,11 @@ export default {
 
             this.confirmEmail = false
             this.activingEmail = false;
+
+        },
+        clearForm(){
+            this.signIn.email = "",
+            this.signIn.password = ""
 
         },
         handleFormActive(){
@@ -174,6 +181,44 @@ export default {
                     }
                 })
         },
+        login(email, password){
+            this.isLoading = true;
+            axios.post('http://localhost:8080/api/login',`email=${email}&password=${password}`,
+                )
+                    .then(res => {
+
+                        this.isLoading = false;
+
+                        router.push("/user")
+
+                    })
+                    .catch(err => {
+                        console.log(err)
+                        if(err.response.data.status === 403){
+
+                            toast("Email not confirmed",
+                            {toastStyle: {
+                                            fontSize: '20px',
+                                            background: "#9b1d1d",
+                                            color: "white"
+                                        }}
+                            )
+
+                        } else {
+
+                            this.isLoading = false;
+                            this.clearForm();
+                            toast("Invalid credentials",
+                            { toastStyle: {
+                                            fontSize: '20px',
+                                            background: "#9b1d1d",
+                                            color: "white"
+                                        }}
+                            )
+                        }
+
+                    })
+        }
     },
     computed: {
 
@@ -190,11 +235,11 @@ export default {
 
 <template>
     {{validating}}
-    <section class="position-relative w-100  d-flex align-items-center justify-content-center" style="height: fit-content">
+    <section class="position-relative grid__layout" style="height: fit-content">
 
-        <img v-if="!isMobile" src="../../../assets/loginImage.png" alt="login" style="width: 40vw;">
+        <img v-if="!isMobile" class="justify__self__right" src="../../../assets/loginImage.png" alt="login" style="width: 40vw;">
 
-        <div class="container__form__title">
+        <div class="container__form__title justify__self__left">
             <template v-if="dataProvide.isSignInFormActived && !confirmEmail" >
                 <form   autocomplete="off"
                         class="login__container p-2 pe-4 ps-4 rounded-4 shadow">
@@ -385,6 +430,14 @@ export default {
 </template>
 
 <style scoped>
+    .grid__layout{
+        width: 70vw;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        align-items: center;
+        justify-items: center;
+    }
+
     .login__container{
         width: 350px;
         max-width: 90vw;
@@ -401,6 +454,7 @@ export default {
         width: fit-content;
 
     }
+
     .register__container{
         width: 35vw;
         display: grid;
@@ -418,5 +472,11 @@ export default {
         color: rgb(255, 112, 112);
         font-size: 15px;
         max-width: 200px;
+    }
+
+    @media (max-width: 1200px) {
+        .grid__layout{
+            width: 90vw;
+        }
     }
 </style>

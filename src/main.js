@@ -1,7 +1,7 @@
 import { createApp } from 'vue'
 import './style.css'
 import App from './App.vue'
-import router from './router/routes-home.js'
+import router from './router/routes.js'
 import Vue3Lottie from 'vue3-lottie'
 import 'vue3-lottie/dist/style.css'
 
